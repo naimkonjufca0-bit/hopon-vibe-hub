@@ -215,12 +215,90 @@ export type Database = {
         }
         Relationships: []
       }
+      reel_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          reel_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          reel_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          reel_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reel_likes: {
+        Row: {
+          created_at: string
+          id: string
+          reel_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reel_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reel_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reels: {
+        Row: {
+          audio_label: string | null
+          caption: string | null
+          created_at: string
+          id: string
+          thumbnail_url: string | null
+          user_id: string
+          video_url: string
+          views: number
+        }
+        Insert: {
+          audio_label?: string | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          user_id: string
+          video_url: string
+          views?: number
+        }
+        Update: {
+          audio_label?: string | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          user_id?: string
+          video_url?: string
+          views?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_reel_view: { Args: { reel_uuid: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

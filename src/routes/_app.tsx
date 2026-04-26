@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Compass, PlusSquare, Bell, User, MessageCircle, Moon, Sun } from "lucide-react";
+import { Home, Compass, PlusSquare, Bell, User, MessageCircle, Moon, Sun, Film } from "lucide-react";
 import { HopOnWordmark } from "@/components/HopOnLogo";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth-context";
@@ -56,6 +56,7 @@ function AppLayout() {
         <nav className="mt-8 flex flex-1 flex-col gap-1">
           <NavItem to="/home" icon={Home} label="Home" />
           <NavItem to="/explore" icon={Compass} label="Explore" />
+          <NavItem to="/reels" icon={Film} label="Reels" />
           <NavItem to="/create" icon={PlusSquare} label="Create" />
           <NavItem to="/notifications" icon={Bell} label="Notifications" badge={unread} />
           <NavItem to="/messages" icon={MessageCircle} label="Messages" />
@@ -81,7 +82,7 @@ function AppLayout() {
         <BottomItem to="/home" icon={Home} label="Home" />
         <BottomItem to="/explore" icon={Compass} label="Explore" />
         <BottomItem to="/create" icon={PlusSquare} label="Create" highlight />
-        <BottomItem to="/notifications" icon={Bell} label="Activity" badge={unread} />
+        <BottomItem to="/reels" icon={Film} label="Reels" />
         <BottomItem to="/profile" icon={User} label="Profile" />
       </nav>
     </div>
