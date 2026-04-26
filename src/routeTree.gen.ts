@@ -13,10 +13,14 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
+import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppExploreRouteImport } from './routes/_app/explore'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
+import { Route as AppUUsernameRouteImport } from './routes/_app/u.$username'
+import { Route as AppMessagesUserIdRouteImport } from './routes/_app/messages.$userId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -37,9 +41,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMessagesRoute = AppMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHomeRoute = AppHomeRouteImport.update({
@@ -57,6 +71,16 @@ const AppCreateRoute = AppCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUUsernameRoute = AppUUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMessagesUserIdRoute = AppMessagesUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AppMessagesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,7 +89,11 @@ export interface FileRoutesByFullPath {
   '/create': typeof AppCreateRoute
   '/explore': typeof AppExploreRoute
   '/home': typeof AppHomeRoute
+  '/messages': typeof AppMessagesRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
+  '/profile': typeof AppProfileRoute
+  '/messages/$userId': typeof AppMessagesUserIdRoute
+  '/u/$username': typeof AppUUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +102,11 @@ export interface FileRoutesByTo {
   '/create': typeof AppCreateRoute
   '/explore': typeof AppExploreRoute
   '/home': typeof AppHomeRoute
+  '/messages': typeof AppMessagesRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
+  '/profile': typeof AppProfileRoute
+  '/messages/$userId': typeof AppMessagesUserIdRoute
+  '/u/$username': typeof AppUUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +117,11 @@ export interface FileRoutesById {
   '/_app/create': typeof AppCreateRoute
   '/_app/explore': typeof AppExploreRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/messages': typeof AppMessagesRouteWithChildren
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/profile': typeof AppProfileRoute
+  '/_app/messages/$userId': typeof AppMessagesUserIdRoute
+  '/_app/u/$username': typeof AppUUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,7 +132,11 @@ export interface FileRouteTypes {
     | '/create'
     | '/explore'
     | '/home'
+    | '/messages'
     | '/notifications'
+    | '/profile'
+    | '/messages/$userId'
+    | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -105,7 +145,11 @@ export interface FileRouteTypes {
     | '/create'
     | '/explore'
     | '/home'
+    | '/messages'
     | '/notifications'
+    | '/profile'
+    | '/messages/$userId'
+    | '/u/$username'
   id:
     | '__root__'
     | '/'
@@ -115,7 +159,11 @@ export interface FileRouteTypes {
     | '/_app/create'
     | '/_app/explore'
     | '/_app/home'
+    | '/_app/messages'
     | '/_app/notifications'
+    | '/_app/profile'
+    | '/_app/messages/$userId'
+    | '/_app/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,11 +203,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/notifications': {
       id: '/_app/notifications'
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/messages': {
+      id: '/_app/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AppMessagesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/home': {
@@ -183,21 +245,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreateRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/u/$username': {
+      id: '/_app/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof AppUUsernameRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/messages/$userId': {
+      id: '/_app/messages/$userId'
+      path: '/$userId'
+      fullPath: '/messages/$userId'
+      preLoaderRoute: typeof AppMessagesUserIdRouteImport
+      parentRoute: typeof AppMessagesRoute
+    }
   }
 }
+
+interface AppMessagesRouteChildren {
+  AppMessagesUserIdRoute: typeof AppMessagesUserIdRoute
+}
+
+const AppMessagesRouteChildren: AppMessagesRouteChildren = {
+  AppMessagesUserIdRoute: AppMessagesUserIdRoute,
+}
+
+const AppMessagesRouteWithChildren = AppMessagesRoute._addFileChildren(
+  AppMessagesRouteChildren,
+)
 
 interface AppRouteChildren {
   AppCreateRoute: typeof AppCreateRoute
   AppExploreRoute: typeof AppExploreRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppMessagesRoute: typeof AppMessagesRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppProfileRoute: typeof AppProfileRoute
+  AppUUsernameRoute: typeof AppUUsernameRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCreateRoute: AppCreateRoute,
   AppExploreRoute: AppExploreRoute,
   AppHomeRoute: AppHomeRoute,
+  AppMessagesRoute: AppMessagesRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppProfileRoute: AppProfileRoute,
+  AppUUsernameRoute: AppUUsernameRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -211,3 +305,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
