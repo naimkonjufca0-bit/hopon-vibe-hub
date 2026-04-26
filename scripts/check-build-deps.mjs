@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 // Packages that vite.config.ts (and its plugins) import at build time.
 // Add to this list whenever a new build-time dep is introduced.
 const REQUIRED = [
-  "autoprefixer",
+  "@tailwindcss/vite",
   "tailwindcss",
   "@vitejs/plugin-react",
   "@tanstack/router-plugin",
