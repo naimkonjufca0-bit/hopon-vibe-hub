@@ -107,10 +107,17 @@ function Chat() {
     // Throttle to once every 1.5s
     if (now - lastTypingSentRef.current < 1500) return;
     lastTypingSentRef.current = now;
+    // In-chat channel (for the open chat indicator)
     supabase.channel(channelName).send({
       type: "broadcast",
       event: "typing",
       payload: { user_id: user.id },
+    });
+    // Per-recipient inbox channel (for the thread list indicator)
+    supabase.channel(`user-inbox:${userId}`).send({
+      type: "broadcast",
+      event: "typing",
+      payload: { from: user.id },
     });
   };
 
