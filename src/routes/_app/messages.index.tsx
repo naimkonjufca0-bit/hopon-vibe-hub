@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar } from "@/components/PostCard";
@@ -19,6 +19,8 @@ function MessagesIndex() {
   const { user } = useAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [typingFrom, setTypingFrom] = useState<Record<string, boolean>>({});
+  const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -46,11 +48,36 @@ function MessagesIndex() {
       setLoading(false);
     };
     load();
+
     const ch = supabase
       .channel("msg-list")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+
+    // Listen to typing broadcasts targeted at this user
+    const inbox = supabase
+      .channel(`user-inbox:${user.id}`)
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const from = payload.payload?.from as string | undefined;
+        if (!from || from === user.id) return;
+        setTypingFrom((prev) => ({ ...prev, [from]: true }));
+        if (typingTimeouts.current[from]) clearTimeout(typingTimeouts.current[from]);
+        typingTimeouts.current[from] = setTimeout(() => {
+          setTypingFrom((prev) => {
+            const next = { ...prev };
+            delete next[from];
+            return next;
+          });
+        }, 2500);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ch);
+      supabase.removeChannel(inbox);
+      Object.values(typingTimeouts.current).forEach(clearTimeout);
+      typingTimeouts.current = {};
+    };
   }, [user]);
 
   return (
@@ -62,16 +89,30 @@ function MessagesIndex() {
         <div className="rounded-3xl border border-border bg-card p-10 text-center">
           <p className="text-sm text-muted-foreground">No conversations yet. Visit a profile to start one.</p>
         </div>
-      ) : threads.map((t) => (
-        <Link key={t.userId} to="/messages/$userId" params={{ userId: t.userId }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 hover:bg-secondary">
-          <Avatar src={t.avatar_url} name={t.username} />
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm">{t.username}</p>
-            <p className="text-xs text-muted-foreground truncate">{t.last}</p>
-          </div>
-          <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(t.at), { addSuffix: true })}</p>
-        </Link>
-      ))}
+      ) : threads.map((t) => {
+        const isTyping = !!typingFrom[t.userId];
+        return (
+          <Link key={t.userId} to="/messages/$userId" params={{ userId: t.userId }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 hover:bg-secondary">
+            <Avatar src={t.avatar_url} name={t.username} />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{t.username}</p>
+              {isTyping ? (
+                <p className="text-xs text-primary flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-0.5">
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-primary" />
+                  </span>
+                  typing…
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground truncate">{t.last}</p>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(t.at), { addSuffix: true })}</p>
+          </Link>
+        );
+      })}
     </div>
   );
 }
