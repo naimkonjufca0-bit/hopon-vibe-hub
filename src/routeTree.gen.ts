@@ -19,6 +19,7 @@ import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppExploreRouteImport } from './routes/_app/explore'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
+import { Route as AppMessagesIndexRouteImport } from './routes/_app/messages.index'
 import { Route as AppUUsernameRouteImport } from './routes/_app/u.$username'
 import { Route as AppMessagesUserIdRouteImport } from './routes/_app/messages.$userId'
 
@@ -71,6 +72,11 @@ const AppCreateRoute = AppCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMessagesIndexRoute = AppMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppMessagesRoute,
+} as any)
 const AppUUsernameRoute = AppUUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/messages/$userId': typeof AppMessagesUserIdRoute
   '/u/$username': typeof AppUUsernameRoute
+  '/messages/': typeof AppMessagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,11 +109,11 @@ export interface FileRoutesByTo {
   '/create': typeof AppCreateRoute
   '/explore': typeof AppExploreRoute
   '/home': typeof AppHomeRoute
-  '/messages': typeof AppMessagesRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/messages/$userId': typeof AppMessagesUserIdRoute
   '/u/$username': typeof AppUUsernameRoute
+  '/messages': typeof AppMessagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +129,7 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/_app/messages/$userId': typeof AppMessagesUserIdRoute
   '/_app/u/$username': typeof AppUUsernameRoute
+  '/_app/messages/': typeof AppMessagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +145,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/messages/$userId'
     | '/u/$username'
+    | '/messages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,11 +154,11 @@ export interface FileRouteTypes {
     | '/create'
     | '/explore'
     | '/home'
-    | '/messages'
     | '/notifications'
     | '/profile'
     | '/messages/$userId'
     | '/u/$username'
+    | '/messages'
   id:
     | '__root__'
     | '/'
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/messages/$userId'
     | '/_app/u/$username'
+    | '/_app/messages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -245,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreateRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/messages/': {
+      id: '/_app/messages/'
+      path: '/'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AppMessagesIndexRouteImport
+      parentRoute: typeof AppMessagesRoute
+    }
     '/_app/u/$username': {
       id: '/_app/u/$username'
       path: '/u/$username'
@@ -264,10 +281,12 @@ declare module '@tanstack/react-router' {
 
 interface AppMessagesRouteChildren {
   AppMessagesUserIdRoute: typeof AppMessagesUserIdRoute
+  AppMessagesIndexRoute: typeof AppMessagesIndexRoute
 }
 
 const AppMessagesRouteChildren: AppMessagesRouteChildren = {
   AppMessagesUserIdRoute: AppMessagesUserIdRoute,
+  AppMessagesIndexRoute: AppMessagesIndexRoute,
 }
 
 const AppMessagesRouteWithChildren = AppMessagesRoute._addFileChildren(
@@ -305,3 +324,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
