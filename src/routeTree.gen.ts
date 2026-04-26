@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppReelsRouteImport } from './routes/_app/reels'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppMessagesRouteImport } from './routes/_app/messages'
@@ -21,6 +22,7 @@ import { Route as AppExploreRouteImport } from './routes/_app/explore'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
 import { Route as AppMessagesIndexRouteImport } from './routes/_app/messages.index'
 import { Route as AppUUsernameRouteImport } from './routes/_app/u.$username'
+import { Route as AppReelsNewRouteImport } from './routes/_app/reels.new'
 import { Route as AppMessagesUserIdRouteImport } from './routes/_app/messages.$userId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -41,6 +43,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppReelsRoute = AppReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -82,6 +89,11 @@ const AppUUsernameRoute = AppUUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReelsNewRoute = AppReelsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppReelsRoute,
+} as any)
 const AppMessagesUserIdRoute = AppMessagesUserIdRouteImport.update({
   id: '/$userId',
   path: '/$userId',
@@ -98,7 +110,9 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AppMessagesRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
+  '/reels': typeof AppReelsRouteWithChildren
   '/messages/$userId': typeof AppMessagesUserIdRoute
+  '/reels/new': typeof AppReelsNewRoute
   '/u/$username': typeof AppUUsernameRoute
   '/messages/': typeof AppMessagesIndexRoute
 }
@@ -111,7 +125,9 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
+  '/reels': typeof AppReelsRouteWithChildren
   '/messages/$userId': typeof AppMessagesUserIdRoute
+  '/reels/new': typeof AppReelsNewRoute
   '/u/$username': typeof AppUUsernameRoute
   '/messages': typeof AppMessagesIndexRoute
 }
@@ -127,7 +143,9 @@ export interface FileRoutesById {
   '/_app/messages': typeof AppMessagesRouteWithChildren
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/reels': typeof AppReelsRouteWithChildren
   '/_app/messages/$userId': typeof AppMessagesUserIdRoute
+  '/_app/reels/new': typeof AppReelsNewRoute
   '/_app/u/$username': typeof AppUUsernameRoute
   '/_app/messages/': typeof AppMessagesIndexRoute
 }
@@ -143,7 +161,9 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/profile'
+    | '/reels'
     | '/messages/$userId'
+    | '/reels/new'
     | '/u/$username'
     | '/messages/'
   fileRoutesByTo: FileRoutesByTo
@@ -156,7 +176,9 @@ export interface FileRouteTypes {
     | '/home'
     | '/notifications'
     | '/profile'
+    | '/reels'
     | '/messages/$userId'
+    | '/reels/new'
     | '/u/$username'
     | '/messages'
   id:
@@ -171,7 +193,9 @@ export interface FileRouteTypes {
     | '/_app/messages'
     | '/_app/notifications'
     | '/_app/profile'
+    | '/_app/reels'
     | '/_app/messages/$userId'
+    | '/_app/reels/new'
     | '/_app/u/$username'
     | '/_app/messages/'
   fileRoutesById: FileRoutesById
@@ -212,6 +236,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/reels': {
+      id: '/_app/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof AppReelsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -269,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUUsernameRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/reels/new': {
+      id: '/_app/reels/new'
+      path: '/new'
+      fullPath: '/reels/new'
+      preLoaderRoute: typeof AppReelsNewRouteImport
+      parentRoute: typeof AppReelsRoute
+    }
     '/_app/messages/$userId': {
       id: '/_app/messages/$userId'
       path: '/$userId'
@@ -293,6 +331,18 @@ const AppMessagesRouteWithChildren = AppMessagesRoute._addFileChildren(
   AppMessagesRouteChildren,
 )
 
+interface AppReelsRouteChildren {
+  AppReelsNewRoute: typeof AppReelsNewRoute
+}
+
+const AppReelsRouteChildren: AppReelsRouteChildren = {
+  AppReelsNewRoute: AppReelsNewRoute,
+}
+
+const AppReelsRouteWithChildren = AppReelsRoute._addFileChildren(
+  AppReelsRouteChildren,
+)
+
 interface AppRouteChildren {
   AppCreateRoute: typeof AppCreateRoute
   AppExploreRoute: typeof AppExploreRoute
@@ -300,6 +350,7 @@ interface AppRouteChildren {
   AppMessagesRoute: typeof AppMessagesRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppReelsRoute: typeof AppReelsRouteWithChildren
   AppUUsernameRoute: typeof AppUUsernameRoute
 }
 
@@ -310,6 +361,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMessagesRoute: AppMessagesRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppReelsRoute: AppReelsRouteWithChildren,
   AppUUsernameRoute: AppUUsernameRoute,
 }
 
