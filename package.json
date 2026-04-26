@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "check:build-deps": "node scripts/check-build-deps.mjs",
+    "prebuild": "node scripts/check-build-deps.mjs",
+    "prebuild:dev": "node scripts/check-build-deps.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
