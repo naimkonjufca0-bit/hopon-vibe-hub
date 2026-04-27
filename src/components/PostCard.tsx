@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, MessageCircle, Send, Bookmark, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [newComment, setNewComment] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [focusInput, setFocusInput] = useState(false);
+  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -106,6 +107,22 @@ export function PostCard({ post }: { post: FeedPost }) {
     await loadComments();
   };
 
+  const isInteractiveTap = (target: EventTarget | null) =>
+    target instanceof HTMLElement && !!target.closest("a, button, input, textarea, select, form");
+
+  const startPostTap = (e: React.PointerEvent<HTMLElement>) => {
+    if (isInteractiveTap(e.target)) return;
+    pointerStart.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  };
+
+  const finishPostTap = (e: React.PointerEvent<HTMLElement>) => {
+    const start = pointerStart.current;
+    pointerStart.current = null;
+    if (!start || start.id !== e.pointerId || isInteractiveTap(e.target)) return;
+    const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+    if (moved <= 12) openModal(false);
+  };
+
   const submitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
@@ -143,7 +160,12 @@ export function PostCard({ post }: { post: FeedPost }) {
 
   return (
     <>
-      <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in">
+      <article
+        className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in"
+        onPointerDown={startPostTap}
+        onPointerUp={finishPostTap}
+        onPointerCancel={() => { pointerStart.current = null; }}
+      >
         <header className="flex items-center gap-3 p-4">
           <Link to="/u/$username" params={{ username: profile?.username ?? "" }}>
             <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} />
@@ -160,17 +182,18 @@ export function PostCard({ post }: { post: FeedPost }) {
           role="button"
           tabIndex={0}
           onDoubleClick={toggleLike}
-          onClick={() => openModal(false)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(false); } }}
-          className="relative block w-full bg-black/40 cursor-pointer select-none"
+          className="relative block w-full bg-black/40 cursor-pointer select-none touch-manipulation"
           aria-label="Open post"
         >
           {post.media_type === "video" ? (
             <video
               src={post.media_url}
-              controls
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-h-[600px] object-contain pointer-events-auto"
+              muted
+              loop
+              playsInline
+              autoPlay
+              className="w-full max-h-[600px] object-contain pointer-events-none"
             />
           ) : (
             <img
