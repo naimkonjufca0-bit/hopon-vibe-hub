@@ -156,19 +156,32 @@ export function PostCard({ post }: { post: FeedPost }) {
           </div>
         </header>
 
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onDoubleClick={toggleLike}
           onClick={() => openModal(false)}
-          className="relative block w-full bg-black/40 cursor-pointer"
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(false); } }}
+          className="relative block w-full bg-black/40 cursor-pointer select-none"
           aria-label="Open post"
         >
           {post.media_type === "video" ? (
-            <video src={post.media_url} controls onClick={(e) => e.stopPropagation()} className="w-full max-h-[600px] object-contain" />
+            <video
+              src={post.media_url}
+              controls
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-h-[600px] object-contain pointer-events-auto"
+            />
           ) : (
-            <img src={post.media_url} alt={post.caption ?? "post"} className="w-full max-h-[600px] object-cover" loading="lazy" />
+            <img
+              src={post.media_url}
+              alt={post.caption ?? "post"}
+              className="w-full max-h-[600px] object-cover pointer-events-none"
+              loading="lazy"
+              draggable={false}
+            />
           )}
-        </button>
+        </div>
 
         <div className="flex items-center gap-2 p-3">
           <button onClick={toggleLike} aria-label="Like" className="rounded-full p-2 hover:bg-secondary">
