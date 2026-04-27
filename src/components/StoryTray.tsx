@@ -29,11 +29,21 @@ export function StoryTray() {
   const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
 
   const load = async () => {
-    const { data } = await supabase
+    const { data: rawStatuses } = await supabase
       .from("statuses")
-      .select("id, user_id, media_url, media_type, caption, created_at, profiles!statuses_user_id_fkey:profiles(id, username, avatar_url, display_name)")
+      .select("id, user_id, media_url, media_type, caption, created_at")
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: true });
+    const rows = (rawStatuses as StatusRow[] | null) ?? [];
+    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+    let profilesById = new Map<string, ProfileLite>();
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, display_name")
+        .in("id", userIds);
+      for (const p of (profs as ProfileLite[] | null) ?? []) profilesById.set(p.id, p);
+    }
     const rows = (data as any[]) ?? [];
     const map = new Map<string, StoryGroup>();
     for (const r of rows) {
