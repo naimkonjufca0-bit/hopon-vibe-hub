@@ -293,6 +293,84 @@ export type Database = {
         }
         Relationships: []
       }
+      status_replies: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+          status_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+          status_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+          status_id?: string
+        }
+        Relationships: []
+      }
+      status_views: {
+        Row: {
+          created_at: string
+          id: string
+          status_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      statuses: {
+        Row: {
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_type: string
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
