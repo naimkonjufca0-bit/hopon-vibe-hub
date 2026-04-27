@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -16,15 +16,24 @@ export type FeedPost = {
   profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
 };
 
+type CommentRow = {
+  id: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  profiles: { username: string; avatar_url: string | null } | null;
+};
+
 export function PostCard({ post }: { post: FeedPost }) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [pop, setPop] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<Array<{ id: string; content: string; user_id: string; created_at: string; profiles: { username: string; avatar_url: string | null } | null }>>([]);
+  const [comments, setComments] = useState<CommentRow[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [focusInput, setFocusInput] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -42,10 +51,26 @@ export function PostCard({ post }: { post: FeedPost }) {
     const ch = supabase
       .channel(`post-${post.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "likes", filter: `post_id=eq.${post.id}` }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `post_id=eq.${post.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `post_id=eq.${post.id}` }, () => {
+        load();
+        if (modalOpen) loadComments();
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [post.id, user]);
+  }, [post.id, user, modalOpen]);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setModalOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [modalOpen]);
 
   const toggleLike = async () => {
     if (!user) return;
@@ -75,9 +100,10 @@ export function PostCard({ post }: { post: FeedPost }) {
     setComments((data as any) ?? []);
   };
 
-  const openComments = async () => {
-    setShowComments((s) => !s);
-    if (!showComments) await loadComments();
+  const openModal = async (focus = false) => {
+    setFocusInput(focus);
+    setModalOpen(true);
+    await loadComments();
   };
 
   const submitComment = async (e: React.FormEvent) => {
@@ -90,79 +116,232 @@ export function PostCard({ post }: { post: FeedPost }) {
     else loadComments();
   };
 
+  const sharePost = async () => {
+    const url = `${window.location.origin}/u/${post.profiles?.username ?? ""}`;
+    const shareData = {
+      title: `${post.profiles?.username ?? "HopOn"} on HopOn`,
+      text: post.caption ?? "Check out this post on HopOn",
+      url,
+    };
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      /* user cancelled or share failed — fall through to clipboard */
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard");
+    } catch {
+      toast.error("Couldn't share this post");
+    }
+  };
+
   const profile = post.profiles;
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in">
-      <header className="flex items-center gap-3 p-4">
-        <Link to="/u/$username" params={{ username: profile?.username ?? "" }}>
-          <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="font-semibold text-sm hover:underline">
-            {profile?.username ?? "user"}
+    <>
+      <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in">
+        <header className="flex items-center gap-3 p-4">
+          <Link to="/u/$username" params={{ username: profile?.username ?? "" }}>
+            <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} />
           </Link>
-          <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</p>
-        </div>
-      </header>
+          <div className="flex-1 min-w-0">
+            <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="font-semibold text-sm hover:underline">
+              {profile?.username ?? "user"}
+            </Link>
+            <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</p>
+          </div>
+        </header>
 
-      <div className="relative bg-black/40">
-        {post.media_type === "video" ? (
-          <video src={post.media_url} controls className="w-full max-h-[600px] object-contain" />
-        ) : (
-          <img src={post.media_url} alt={post.caption ?? "post"} className="w-full max-h-[600px] object-cover" loading="lazy" />
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 p-3">
-        <button onClick={toggleLike} className="rounded-full p-2 hover:bg-secondary">
-          <Heart className={`h-6 w-6 transition ${liked ? "fill-pink-500 text-pink-500" : ""} ${pop ? "animate-heart-pop" : ""}`} />
+        <button
+          type="button"
+          onDoubleClick={toggleLike}
+          onClick={() => openModal(false)}
+          className="relative block w-full bg-black/40 cursor-pointer"
+          aria-label="Open post"
+        >
+          {post.media_type === "video" ? (
+            <video src={post.media_url} controls onClick={(e) => e.stopPropagation()} className="w-full max-h-[600px] object-contain" />
+          ) : (
+            <img src={post.media_url} alt={post.caption ?? "post"} className="w-full max-h-[600px] object-cover" loading="lazy" />
+          )}
         </button>
-        <button onClick={openComments} className="rounded-full p-2 hover:bg-secondary">
-          <MessageCircle className="h-6 w-6" />
-        </button>
-        <button className="rounded-full p-2 hover:bg-secondary"><Send className="h-6 w-6" /></button>
-        <button className="ml-auto rounded-full p-2 hover:bg-secondary"><Bookmark className="h-6 w-6" /></button>
-      </div>
 
-      <div className="px-4 pb-4 text-sm">
-        <p className="font-semibold">{likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}</p>
-        {post.caption && (
-          <p className="mt-1">
-            <span className="font-semibold mr-1">{profile?.username}</span>{post.caption}
-          </p>
-        )}
-        {commentCount > 0 && !showComments && (
-          <button onClick={openComments} className="mt-1 text-xs text-muted-foreground hover:underline">
-            View all {commentCount} {commentCount === 1 ? "comment" : "comments"}
+        <div className="flex items-center gap-2 p-3">
+          <button onClick={toggleLike} aria-label="Like" className="rounded-full p-2 hover:bg-secondary">
+            <Heart className={`h-6 w-6 transition ${liked ? "fill-pink-500 text-pink-500" : ""} ${pop ? "animate-heart-pop" : ""}`} />
           </button>
-        )}
+          <button onClick={() => openModal(true)} aria-label="Comment" className="rounded-full p-2 hover:bg-secondary">
+            <MessageCircle className="h-6 w-6" />
+          </button>
+          <button onClick={sharePost} aria-label="Share" className="rounded-full p-2 hover:bg-secondary">
+            <Send className="h-6 w-6" />
+          </button>
+          <button aria-label="Save" className="ml-auto rounded-full p-2 hover:bg-secondary"><Bookmark className="h-6 w-6" /></button>
+        </div>
 
-        {showComments && (
-          <div className="mt-3 space-y-3">
-            {comments.map((c) => (
-              <div key={c.id} className="flex gap-2">
-                <Avatar src={c.profiles?.avatar_url ?? null} name={c.profiles?.username ?? "?"} size={28} />
+        <div className="px-4 pb-4 text-sm">
+          <p className="font-semibold">{likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}</p>
+          {post.caption && (
+            <p className="mt-1">
+              <span className="font-semibold mr-1">{profile?.username}</span>{post.caption}
+            </p>
+          )}
+          {commentCount > 0 && (
+            <button onClick={() => openModal(false)} className="mt-1 text-xs text-muted-foreground hover:underline">
+              View all {commentCount} {commentCount === 1 ? "comment" : "comments"}
+            </button>
+          )}
+        </div>
+      </article>
+
+      {modalOpen && (
+        <PostModal
+          post={post}
+          comments={comments}
+          liked={liked}
+          likeCount={likeCount}
+          pop={pop}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          submitComment={submitComment}
+          toggleLike={toggleLike}
+          sharePost={sharePost}
+          autoFocusInput={focusInput}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function PostModal({
+  post, comments, liked, likeCount, pop, newComment, setNewComment,
+  submitComment, toggleLike, sharePost, autoFocusInput, onClose,
+}: {
+  post: FeedPost;
+  comments: CommentRow[];
+  liked: boolean;
+  likeCount: number;
+  pop: boolean;
+  newComment: string;
+  setNewComment: (v: string) => void;
+  submitComment: (e: React.FormEvent) => void;
+  toggleLike: () => void;
+  sharePost: () => void;
+  autoFocusInput: boolean;
+  onClose: () => void;
+}) {
+  const profile = post.profiles;
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 md:p-6 animate-float-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-3 right-3 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      <div
+        className="relative flex h-full w-full max-w-5xl flex-col overflow-hidden bg-card md:h-[85vh] md:flex-row md:rounded-2xl md:shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Media */}
+        <div
+          className="relative flex items-center justify-center bg-black md:flex-1"
+          onDoubleClick={toggleLike}
+        >
+          {post.media_type === "video" ? (
+            <video src={post.media_url} controls className="max-h-[55vh] w-full object-contain md:max-h-full" />
+          ) : (
+            <img src={post.media_url} alt={post.caption ?? "post"} className="max-h-[55vh] w-full object-contain md:max-h-full" />
+          )}
+        </div>
+
+        {/* Side panel */}
+        <div className="flex w-full flex-col border-t border-border bg-card md:w-[380px] md:border-l md:border-t-0">
+          <header className="flex items-center gap-3 border-b border-border p-3">
+            <Link to="/u/$username" params={{ username: profile?.username ?? "" }} onClick={onClose}>
+              <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} size={36} />
+            </Link>
+            <Link
+              to="/u/$username"
+              params={{ username: profile?.username ?? "" }}
+              onClick={onClose}
+              className="text-sm font-semibold hover:underline"
+            >
+              {profile?.username ?? "user"}
+            </Link>
+          </header>
+
+          <div className="flex-1 overflow-y-auto px-4 py-3 text-sm space-y-3 max-h-[40vh] md:max-h-none">
+            {post.caption && (
+              <div className="flex gap-2">
+                <Avatar src={profile?.avatar_url ?? null} name={profile?.username ?? "?"} size={28} />
                 <div className="flex-1 text-xs">
-                  <span className="font-semibold mr-1">{c.profiles?.username}</span>{c.content}
+                  <span className="font-semibold mr-1">{profile?.username}</span>{post.caption}
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                   </p>
                 </div>
               </div>
-            ))}
-            <form onSubmit={submitComment} className="flex gap-2">
+            )}
+            {comments.length === 0 ? (
+              <p className="text-center text-xs text-muted-foreground py-6">No comments yet. Be the first.</p>
+            ) : (
+              comments.map((c) => (
+                <div key={c.id} className="flex gap-2">
+                  <Avatar src={c.profiles?.avatar_url ?? null} name={c.profiles?.username ?? "?"} size={28} />
+                  <div className="flex-1 text-xs">
+                    <span className="font-semibold mr-1">{c.profiles?.username}</span>{c.content}
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="border-t border-border">
+            <div className="flex items-center gap-2 p-3">
+              <button onClick={toggleLike} aria-label="Like" className="rounded-full p-2 hover:bg-secondary">
+                <Heart className={`h-6 w-6 transition ${liked ? "fill-pink-500 text-pink-500" : ""} ${pop ? "animate-heart-pop" : ""}`} />
+              </button>
+              <button aria-label="Comment" className="rounded-full p-2 hover:bg-secondary">
+                <MessageCircle className="h-6 w-6" />
+              </button>
+              <button onClick={sharePost} aria-label="Share" className="rounded-full p-2 hover:bg-secondary">
+                <Send className="h-6 w-6" />
+              </button>
+              <button aria-label="Save" className="ml-auto rounded-full p-2 hover:bg-secondary"><Bookmark className="h-6 w-6" /></button>
+            </div>
+            <div className="px-4 pb-2 text-sm">
+              <p className="font-semibold">{likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}</p>
+            </div>
+            <form onSubmit={submitComment} className="flex gap-2 p-3 pt-0">
               <input
-                value={newComment} onChange={(e) => setNewComment(e.target.value)}
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Add a comment…"
+                autoFocus={autoFocusInput}
                 className="flex-1 rounded-2xl border border-border bg-input px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-ring"
               />
               <button className="rounded-2xl bg-brand-gradient px-3 text-xs font-semibold text-white">Post</button>
             </form>
           </div>
-        )}
+        </div>
       </div>
-    </article>
+    </div>
   );
 }
 
