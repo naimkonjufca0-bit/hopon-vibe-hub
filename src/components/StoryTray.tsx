@@ -44,19 +44,13 @@ export function StoryTray() {
         .in("id", userIds);
       for (const p of (profs as ProfileLite[] | null) ?? []) profilesById.set(p.id, p);
     }
-    const rows = (data as any[]) ?? [];
     const map = new Map<string, StoryGroup>();
     for (const r of rows) {
-      const p = r.profiles as ProfileLite | null;
+      const p = profilesById.get(r.user_id);
       if (!p) continue;
-      const key = p.id;
-      const existing = map.get(key);
-      const status: StatusRow = {
-        id: r.id, user_id: r.user_id, media_url: r.media_url,
-        media_type: r.media_type, caption: r.caption, created_at: r.created_at,
-      };
-      if (existing) existing.statuses.push(status);
-      else map.set(key, { profile: p, statuses: [status] });
+      const existing = map.get(p.id);
+      if (existing) existing.statuses.push(r);
+      else map.set(p.id, { profile: p, statuses: [r] });
     }
     let arr = Array.from(map.values());
     // Put my own group first
