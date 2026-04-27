@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard, type FeedPost } from "@/components/PostCard";
-import { Loader2, ImagePlus } from "lucide-react";
+import { StoryTray } from "@/components/StoryTray";
+import { ImagePlus } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({ component: Home });
 
@@ -47,22 +48,28 @@ function Home() {
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-3xl border border-border bg-card p-10 text-center shadow-soft">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-brand-gradient shadow-glow">
-          <ImagePlus className="h-8 w-8 text-white" />
+      <>
+        <StoryTray />
+        <div className="rounded-3xl border border-border bg-card p-10 text-center shadow-soft">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-brand-gradient shadow-glow">
+            <ImagePlus className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="mt-4 text-xl font-bold">Your feed is quiet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Be the first to share a moment on HopOn.</p>
+          <Link to="/create" className="mt-5 inline-flex rounded-2xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-glow">
+            Create a post
+          </Link>
         </div>
-        <h2 className="mt-4 text-xl font-bold">Your feed is quiet</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Be the first to share a moment on HopOn.</p>
-        <Link to="/create" className="mt-5 inline-flex rounded-2xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-glow">
-          Create a post
-        </Link>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {posts.map((p) => <PostCard key={p.id} post={p} />)}
+    <div>
+      <StoryTray />
+      <div className="space-y-5">
+        {posts.map((p) => <PostCard key={p.id} post={p} />)}
+      </div>
     </div>
   );
 }
