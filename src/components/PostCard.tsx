@@ -25,7 +25,7 @@ type CommentRow = {
   profiles: { username: string; avatar_url: string | null } | null;
 };
 
-export function PostCard({ post }: { post: FeedPost }) {
+export function PostCard({ post, defaultOpen = false }: { post: FeedPost; defaultOpen?: boolean }) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -33,7 +33,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [pop, setPop] = useState(false);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(defaultOpen);
   const [focusInput, setFocusInput] = useState(false);
   const isMobile = useIsMobile();
   const [hintDismissed, setHintDismissed] = useState(() => {
