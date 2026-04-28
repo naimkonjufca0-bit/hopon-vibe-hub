@@ -35,6 +35,15 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [newComment, setNewComment] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [focusInput, setFocusInput] = useState(false);
+  const isMobile = useIsMobile();
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("postTapHintDismissed") === "1";
+  });
+  const dismissHint = () => {
+    setHintDismissed(true);
+    try { window.localStorage.setItem("postTapHintDismissed", "1"); } catch { /* ignore */ }
+  };
   const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
