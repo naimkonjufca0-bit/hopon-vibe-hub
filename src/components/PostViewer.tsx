@@ -37,28 +37,32 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
     };
   }, [onClose]);
 
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto animate-float-in"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <button
-        onClick={onClose}
-        aria-label="Close"
-        className="fixed top-3 right-3 z-[60] rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
-      >
-        <X className="h-5 w-5" />
-      </button>
-      <div
-        className="mx-auto max-w-2xl p-4 md:p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {loading && <p className="text-center text-sm text-white/80 py-12">Loading…</p>}
-        {!loading && !post && <p className="text-center text-sm text-white/80 py-12">Post not found.</p>}
-        {post && <PostCard post={post} />}
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center" role="dialog" aria-modal="true">
+        <p className="text-sm text-white/80">Loading…</p>
       </div>
-    </div>
+    );
+  }
+  if (!post) {
+    return (
+      <div
+        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center"
+        role="dialog"
+        aria-modal="true"
+        onClick={onClose}
+      >
+        <p className="text-sm text-white/80">Post not found.</p>
+      </div>
+    );
+  }
+  // PostCard renders its own full-screen modal when defaultOpen=true.
+  // The hidden wrapper keeps the article off-screen so only the modal shows.
+  return (
+    <>
+      <div className="sr-only" aria-hidden="true">
+        <PostCard post={post} defaultOpen onCloseModal={onClose} />
+      </div>
+    </>
   );
 }
