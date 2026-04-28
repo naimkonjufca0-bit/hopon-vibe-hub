@@ -25,7 +25,7 @@ type CommentRow = {
   profiles: { username: string; avatar_url: string | null } | null;
 };
 
-export function PostCard({ post, defaultOpen = false }: { post: FeedPost; defaultOpen?: boolean }) {
+export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: FeedPost; defaultOpen?: boolean; onCloseModal?: () => void }) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
