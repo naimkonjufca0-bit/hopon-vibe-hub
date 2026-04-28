@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
 import { PostCard, type FeedPost } from "@/components/PostCard";
-import { X } from "lucide-react";
 
 export function PostViewer({ postId, onClose }: { postId: string; onClose: () => void }) {
-  const { user: _user } = useAuth();
   const [post, setPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
 
