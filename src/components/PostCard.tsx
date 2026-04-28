@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, MessageCircle, Send, Bookmark, X } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, X, Hand } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -34,6 +35,15 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [newComment, setNewComment] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [focusInput, setFocusInput] = useState(false);
+  const isMobile = useIsMobile();
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("postTapHintDismissed") === "1";
+  });
+  const dismissHint = () => {
+    setHintDismissed(true);
+    try { window.localStorage.setItem("postTapHintDismissed", "1"); } catch { /* ignore */ }
+  };
   const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -102,6 +112,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   };
 
   const openModal = async (focus = false) => {
+    dismissHint();
     setFocusInput(focus);
     setModalOpen(true);
     await loadComments();
@@ -203,6 +214,14 @@ export function PostCard({ post }: { post: FeedPost }) {
               loading="lazy"
               draggable={false}
             />
+          )}
+          {isMobile && !hintDismissed && (
+            <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-4 animate-float-in">
+              <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
+                <Hand className="h-4 w-4" />
+                Tap to view
+              </div>
+            </div>
           )}
         </div>
 
