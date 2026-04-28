@@ -75,7 +75,7 @@ export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: Fe
     if (!modalOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setModalOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setModalOpen(false); onCloseModal?.(); } };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
