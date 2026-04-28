@@ -18,6 +18,7 @@ function Explore() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [trending, setTrending] = useState<GridPost[]>([]);
   const [following, setFollowing] = useState<Set<string>>(new Set());
+  const [openPostId, setOpenPostId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from("posts").select("id, media_url, media_type").order("created_at", { ascending: false }).limit(30)
