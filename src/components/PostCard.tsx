@@ -25,7 +25,7 @@ type CommentRow = {
   profiles: { username: string; avatar_url: string | null } | null;
 };
 
-export function PostCard({ post }: { post: FeedPost }) {
+export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: FeedPost; defaultOpen?: boolean; onCloseModal?: () => void }) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -33,7 +33,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [pop, setPop] = useState(false);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(defaultOpen);
   const [focusInput, setFocusInput] = useState(false);
   const isMobile = useIsMobile();
   const [hintDismissed, setHintDismissed] = useState(() => {
@@ -75,13 +75,22 @@ export function PostCard({ post }: { post: FeedPost }) {
     if (!modalOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setModalOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setModalOpen(false); onCloseModal?.(); } };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
   }, [modalOpen]);
+
+  // If opened by default (e.g. from Explore), preload comments
+  useEffect(() => {
+    if (defaultOpen) {
+      dismissHint();
+      loadComments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultOpen]);
 
   const toggleLike = async () => {
     if (!user) return;
@@ -266,7 +275,7 @@ export function PostCard({ post }: { post: FeedPost }) {
           toggleLike={toggleLike}
           sharePost={sharePost}
           autoFocusInput={focusInput}
-          onClose={() => setModalOpen(false)}
+          onClose={() => { setModalOpen(false); onCloseModal?.(); }}
         />
       )}
     </>
