@@ -275,7 +275,7 @@ export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: Fe
           toggleLike={toggleLike}
           sharePost={sharePost}
           autoFocusInput={focusInput}
-          onClose={() => setModalOpen(false)}
+          onClose={() => { setModalOpen(false); onCloseModal?.(); }}
         />
       )}
     </>
