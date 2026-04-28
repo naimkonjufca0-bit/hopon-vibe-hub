@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
 import { Avatar } from "@/components/PostCard";
+import { PostViewer } from "@/components/PostViewer";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
