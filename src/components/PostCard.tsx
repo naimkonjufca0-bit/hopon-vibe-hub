@@ -215,6 +215,14 @@ export function PostCard({ post }: { post: FeedPost }) {
               draggable={false}
             />
           )}
+          {isMobile && !hintDismissed && (
+            <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-4 animate-float-in">
+              <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
+                <Hand className="h-4 w-4" />
+                Tap to view
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 p-3">
