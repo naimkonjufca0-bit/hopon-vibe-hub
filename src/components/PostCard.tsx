@@ -83,6 +83,15 @@ export function PostCard({ post, defaultOpen = false }: { post: FeedPost; defaul
     };
   }, [modalOpen]);
 
+  // If opened by default (e.g. from Explore), preload comments
+  useEffect(() => {
+    if (defaultOpen) {
+      dismissHint();
+      loadComments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultOpen]);
+
   const toggleLike = async () => {
     if (!user) return;
     setPop(true);
