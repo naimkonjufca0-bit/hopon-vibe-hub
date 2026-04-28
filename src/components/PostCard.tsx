@@ -112,6 +112,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   };
 
   const openModal = async (focus = false) => {
+    dismissHint();
     setFocusInput(focus);
     setModalOpen(true);
     await loadComments();
