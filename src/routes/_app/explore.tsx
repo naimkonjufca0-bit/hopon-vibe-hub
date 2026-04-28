@@ -99,18 +99,25 @@ function Explore() {
           ) : (
             <div className="grid grid-cols-3 gap-1">
               {trending.map((p) => (
-                <div key={p.id} className="aspect-square overflow-hidden rounded-xl bg-secondary">
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setOpenPostId(p.id)}
+                  className="aspect-square overflow-hidden rounded-xl bg-secondary touch-manipulation transition active:scale-[0.98] hover:opacity-90"
+                  aria-label="Open post"
+                >
                   {p.media_type === "video" ? (
-                    <video src={p.media_url} className="h-full w-full object-cover" />
+                    <video src={p.media_url} className="h-full w-full object-cover pointer-events-none" muted playsInline />
                   ) : (
-                    <img src={p.media_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <img src={p.media_url} alt="" className="h-full w-full object-cover pointer-events-none" loading="lazy" />
                   )}
-                </div>
+                </button>
               ))}
             </div>
           )}
         </section>
       )}
+      {openPostId && <PostViewer postId={openPostId} onClose={() => setOpenPostId(null)} />}
     </div>
   );
 }
