@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
-import { Avatar } from "@/components/PostCard";
+import { Avatar, type FeedPost } from "@/components/PostCard";
 import { PostViewer } from "@/components/PostViewer";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_app/explore")({ component: Explore });
 
 type Profile = { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null };
-type GridPost = { id: string; media_url: string; media_type: string };
+type GridPost = Omit<FeedPost, "profiles">;
 
 function Explore() {
   const { user } = useAuth();
@@ -18,10 +18,14 @@ function Explore() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [trending, setTrending] = useState<GridPost[]>([]);
   const [following, setFollowing] = useState<Set<string>>(new Set());
-  const [openPostId, setOpenPostId] = useState<string | null>(null);
+  const [openPost, setOpenPost] = useState<GridPost | null>(null);
 
   useEffect(() => {
-    supabase.from("posts").select("id, media_url, media_type").order("created_at", { ascending: false }).limit(30)
+    supabase
+      .from("posts")
+      .select("id, user_id, media_url, media_type, caption, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30)
       .then(({ data }) => setTrending((data as any) ?? []));
   }, []);
 
@@ -102,8 +106,11 @@ function Explore() {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setOpenPostId(p.id)}
-                  className="aspect-square overflow-hidden rounded-xl bg-secondary touch-manipulation transition active:scale-[0.98] hover:opacity-90"
+                  onClick={() => setOpenPost(p)}
+                  onPointerUpCapture={(e) => {
+                    if (e.pointerType !== "mouse") setOpenPost(p);
+                  }}
+                  className="relative isolate aspect-square overflow-hidden rounded-xl bg-secondary touch-manipulation transition active:scale-[0.98] hover:opacity-90"
                   aria-label="Open post"
                 >
                   {p.media_type === "video" ? (
@@ -117,7 +124,7 @@ function Explore() {
           )}
         </section>
       )}
-      {openPostId && <PostViewer postId={openPostId} onClose={() => setOpenPostId(null)} />}
+      {openPost && <PostViewer post={openPost} onClose={() => setOpenPost(null)} />}
     </div>
   );
 }
