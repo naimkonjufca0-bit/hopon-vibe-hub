@@ -5,18 +5,21 @@ import { PostCard, type FeedPost } from "@/components/PostCard";
 export function PostViewer({ postId, onClose }: { postId: string; onClose: () => void }) {
   const [post, setPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      setLoadError(null);
+      const { data, error } = await supabase
         .from("posts")
-        .select("id, user_id, media_url, media_type, caption, created_at, profiles(username, display_name, avatar_url)")
+        .select("id, user_id, media_url, media_type, caption, created_at, profiles!posts_user_id_fkey(username, display_name, avatar_url)")
         .eq("id", postId)
         .maybeSingle();
       if (!cancelled) {
         setPost((data as any) ?? null);
+        setLoadError(error?.message ?? null);
         setLoading(false);
       }
     })();
@@ -49,17 +52,9 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
         aria-modal="true"
         onClick={onClose}
       >
-        <p className="text-sm text-white/80">Post not found.</p>
+        <p className="px-6 text-center text-sm text-white/80">{loadError ? "Couldn't open this post." : "Post not found."}</p>
       </div>
     );
   }
-  // PostCard renders its own full-screen modal when defaultOpen=true.
-  // The hidden wrapper keeps the article off-screen so only the modal shows.
-  return (
-    <>
-      <div className="sr-only" aria-hidden="true">
-        <PostCard post={post} defaultOpen onCloseModal={onClose} />
-      </div>
-    </>
-  );
+  return <PostCard post={post} defaultOpen onCloseModal={onClose} hideArticle />;
 }
