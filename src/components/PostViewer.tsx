@@ -2,8 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard, type FeedPost } from "@/components/PostCard";
 
-export function PostViewer({ postId, onClose }: { postId: string; onClose: () => void }) {
-  const [post, setPost] = useState<FeedPost | null>(null);
+export function PostViewer({
+  post,
+  onClose,
+}: {
+  post: Omit<FeedPost, "profiles">;
+  onClose: () => void;
+}) {
+  const [fullPost, setFullPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -12,20 +18,13 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
     (async () => {
       setLoading(true);
       setLoadError(null);
-      const { data, error } = await supabase
-        .from("posts")
-        .select("id, user_id, media_url, media_type, caption, created_at")
-        .eq("id", postId)
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("username, display_name, avatar_url")
+        .eq("id", post.user_id)
         .maybeSingle();
-      const { data: profile } = data
-        ? await supabase
-            .from("profiles")
-            .select("username, display_name, avatar_url")
-            .eq("id", data.user_id)
-            .maybeSingle()
-        : { data: null };
       if (!cancelled) {
-        setPost(data ? { ...data, profiles: profile ?? null } : null);
+        setFullPost({ ...post, profiles: profile ?? null });
         setLoadError(error?.message ?? null);
         setLoading(false);
       }
@@ -33,7 +32,7 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
     return () => {
       cancelled = true;
     };
-  }, [postId]);
+  }, [post]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -59,7 +58,7 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
       </div>
     );
   }
-  if (!post) {
+  if (!fullPost) {
     return (
       <div
         className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center"
@@ -73,5 +72,5 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
       </div>
     );
   }
-  return <PostCard post={post} defaultOpen onCloseModal={onClose} hideArticle />;
+  return <PostCard post={fullPost} defaultOpen onCloseModal={onClose} hideArticle />;
 }
