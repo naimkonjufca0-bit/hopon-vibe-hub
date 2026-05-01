@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard, type FeedPost } from "@/components/PostCard";
 
-export function PostViewer({ post, onClose }: { post: Omit<FeedPost, "profiles">; onClose: () => void }) {
+export function PostViewer({
+  post,
+  onClose,
+}: {
+  post: Omit<FeedPost, "profiles">;
+  onClose: () => void;
+}) {
   const [fullPost, setFullPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);

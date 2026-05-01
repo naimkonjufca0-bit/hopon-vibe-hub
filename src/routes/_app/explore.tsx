@@ -9,7 +9,13 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/explore")({ component: Explore });
 
-type Profile = { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null };
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+};
 type GridPost = Omit<FeedPost, "profiles">;
 
 function Explore() {
@@ -31,7 +37,10 @@ function Explore() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("follows").select("following_id").eq("follower_id", user.id)
+    supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id)
       .then(({ data }) => setFollowing(new Set((data ?? []).map((d: any) => d.following_id))));
   }, [user]);
 
@@ -51,10 +60,20 @@ function Explore() {
   const toggleFollow = async (targetId: string) => {
     if (!user || targetId === user.id) return;
     if (following.has(targetId)) {
-      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetId);
-      setFollowing((s) => { const n = new Set(s); n.delete(targetId); return n; });
+      await supabase
+        .from("follows")
+        .delete()
+        .eq("follower_id", user.id)
+        .eq("following_id", targetId);
+      setFollowing((s) => {
+        const n = new Set(s);
+        n.delete(targetId);
+        return n;
+      });
     } else {
-      const { error } = await supabase.from("follows").insert({ follower_id: user.id, following_id: targetId });
+      const { error } = await supabase
+        .from("follows")
+        .insert({ follower_id: user.id, following_id: targetId });
       if (error) return toast.error(error.message);
       setFollowing((s) => new Set(s).add(targetId));
     }
@@ -65,7 +84,9 @@ function Explore() {
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
-          value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search HopOn"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search HopOn"
           className="w-full rounded-2xl border border-border bg-card pl-11 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
@@ -75,23 +96,38 @@ function Explore() {
           <h2 className="px-1 text-sm font-semibold text-muted-foreground">People</h2>
           {users.length === 0 ? (
             <p className="text-sm text-muted-foreground">No users found.</p>
-          ) : users.map((u) => (
-            <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-              <Link to="/u/$username" params={{ username: u.username }}><Avatar src={u.avatar_url} name={u.username} /></Link>
-              <div className="flex-1 min-w-0">
-                <Link to="/u/$username" params={{ username: u.username }} className="font-semibold text-sm hover:underline">{u.username}</Link>
-                <p className="text-xs text-muted-foreground truncate">{u.display_name ?? u.bio ?? "On HopOn"}</p>
+          ) : (
+            users.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+              >
+                <Link to="/u/$username" params={{ username: u.username }}>
+                  <Avatar src={u.avatar_url} name={u.username} />
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link
+                    to="/u/$username"
+                    params={{ username: u.username }}
+                    className="font-semibold text-sm hover:underline"
+                  >
+                    {u.username}
+                  </Link>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {u.display_name ?? u.bio ?? "On HopOn"}
+                  </p>
+                </div>
+                {user && u.id !== user.id && (
+                  <button
+                    onClick={() => toggleFollow(u.id)}
+                    className={`rounded-2xl px-4 py-1.5 text-xs font-semibold ${following.has(u.id) ? "bg-secondary" : "bg-brand-gradient text-white shadow-glow"}`}
+                  >
+                    {following.has(u.id) ? "Following" : "Follow"}
+                  </button>
+                )}
               </div>
-              {user && u.id !== user.id && (
-                <button
-                  onClick={() => toggleFollow(u.id)}
-                  className={`rounded-2xl px-4 py-1.5 text-xs font-semibold ${following.has(u.id) ? "bg-secondary" : "bg-brand-gradient text-white shadow-glow"}`}
-                >
-                  {following.has(u.id) ? "Following" : "Follow"}
-                </button>
-              )}
-            </div>
-          ))}
+            ))
+          )}
         </section>
       )}
 
@@ -114,9 +150,19 @@ function Explore() {
                   aria-label="Open post"
                 >
                   {p.media_type === "video" ? (
-                    <video src={p.media_url} className="h-full w-full object-cover pointer-events-none" muted playsInline />
+                    <video
+                      src={p.media_url}
+                      className="h-full w-full object-cover pointer-events-none"
+                      muted
+                      playsInline
+                    />
                   ) : (
-                    <img src={p.media_url} alt="" className="h-full w-full object-cover pointer-events-none" loading="lazy" />
+                    <img
+                      src={p.media_url}
+                      alt=""
+                      className="h-full w-full object-cover pointer-events-none"
+                      loading="lazy"
+                    />
                   )}
                 </button>
               ))}
