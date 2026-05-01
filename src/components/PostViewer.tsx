@@ -14,11 +14,18 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
       setLoadError(null);
       const { data, error } = await supabase
         .from("posts")
-        .select("id, user_id, media_url, media_type, caption, created_at, profiles!posts_user_id_fkey(username, display_name, avatar_url)")
+        .select("id, user_id, media_url, media_type, caption, created_at")
         .eq("id", postId)
         .maybeSingle();
+      const { data: profile } = data
+        ? await supabase
+            .from("profiles")
+            .select("username, display_name, avatar_url")
+            .eq("id", data.user_id)
+            .maybeSingle()
+        : { data: null };
       if (!cancelled) {
-        setPost((data as any) ?? null);
+        setPost(data ? ({ ...(data as any), profiles: profile ?? null } as FeedPost) : null);
         setLoadError(error?.message ?? null);
         setLoading(false);
       }
