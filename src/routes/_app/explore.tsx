@@ -143,8 +143,10 @@ function Explore() {
                   key={p.id}
                   type="button"
                   onClick={() => setOpenPost(p)}
-                  onPointerUpCapture={(e) => {
-                    if (e.pointerType !== "mouse") setOpenPost(p);
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOpenPost(p);
                   }}
                   className="relative isolate aspect-square overflow-hidden rounded-xl bg-secondary touch-manipulation transition active:scale-[0.98] hover:opacity-90"
                   aria-label="Open post"
