@@ -32,7 +32,7 @@ function Explore() {
       .select("id, user_id, media_url, media_type, caption, created_at")
       .order("created_at", { ascending: false })
       .limit(30)
-      .then(({ data }) => setTrending((data as any) ?? []));
+      .then(({ data }) => setTrending((data ?? []) as GridPost[]));
   }, []);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ function Explore() {
       .from("follows")
       .select("following_id")
       .eq("follower_id", user.id)
-      .then(({ data }) => setFollowing(new Set((data ?? []).map((d: any) => d.following_id))));
+      .then(({ data }) => setFollowing(new Set((data ?? []).map((d) => d.following_id))));
   }, [user]);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ function Explore() {
         .select("id, username, display_name, avatar_url, bio")
         .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
         .limit(20);
-      setUsers((data as any) ?? []);
+      setUsers((data ?? []) as Profile[]);
     }, 200);
     return () => clearTimeout(t);
   }, [q]);
