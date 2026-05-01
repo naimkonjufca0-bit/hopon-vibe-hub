@@ -25,7 +25,7 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
             .maybeSingle()
         : { data: null };
       if (!cancelled) {
-        setPost(data ? ({ ...(data as any), profiles: profile ?? null } as FeedPost) : null);
+        setPost(data ? { ...data, profiles: profile ?? null } : null);
         setLoadError(error?.message ?? null);
         setLoading(false);
       }
