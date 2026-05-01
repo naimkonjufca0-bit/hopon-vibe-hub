@@ -30,13 +30,17 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [postId]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
@@ -46,7 +50,11 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center" role="dialog" aria-modal="true">
+      <div
+        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center"
+        role="dialog"
+        aria-modal="true"
+      >
         <p className="text-sm text-white/80">Loading…</p>
       </div>
     );
@@ -59,7 +67,9 @@ export function PostViewer({ postId, onClose }: { postId: string; onClose: () =>
         aria-modal="true"
         onClick={onClose}
       >
-        <p className="px-6 text-center text-sm text-white/80">{loadError ? "Couldn't open this post." : "Post not found."}</p>
+        <p className="px-6 text-center text-sm text-white/80">
+          {loadError ? "Couldn't open this post." : "Post not found."}
+        </p>
       </div>
     );
   }
