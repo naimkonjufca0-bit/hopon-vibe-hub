@@ -25,7 +25,17 @@ type CommentRow = {
   profiles: { username: string; avatar_url: string | null } | null;
 };
 
-export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: FeedPost; defaultOpen?: boolean; onCloseModal?: () => void }) {
+export function PostCard({
+  post,
+  defaultOpen = false,
+  onCloseModal,
+  hideArticle = false,
+}: {
+  post: FeedPost;
+  defaultOpen?: boolean;
+  onCloseModal?: () => void;
+  hideArticle?: boolean;
+}) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -180,87 +190,89 @@ export function PostCard({ post, defaultOpen = false, onCloseModal }: { post: Fe
 
   return (
     <>
-      <article
-        className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in"
-        onPointerDown={startPostTap}
-        onPointerUp={finishPostTap}
-        onPointerCancel={() => { pointerStart.current = null; }}
-      >
-        <header className="flex items-center gap-3 p-4">
-          <Link to="/u/$username" params={{ username: profile?.username ?? "" }}>
-            <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="font-semibold text-sm hover:underline">
-              {profile?.username ?? "user"}
-            </Link>
-            <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</p>
-          </div>
-        </header>
-
-        <div
-          role="button"
-          tabIndex={0}
-          onDoubleClick={toggleLike}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(false); } }}
-          className="relative block w-full bg-black/40 cursor-pointer select-none touch-manipulation"
-          aria-label="Open post"
+      {!hideArticle && (
+        <article
+          className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft animate-float-in"
+          onPointerDown={startPostTap}
+          onPointerUp={finishPostTap}
+          onPointerCancel={() => { pointerStart.current = null; }}
         >
-          {post.media_type === "video" ? (
-            <video
-              src={post.media_url}
-              muted
-              loop
-              playsInline
-              autoPlay
-              className="w-full max-h-[600px] object-contain pointer-events-none"
-            />
-          ) : (
-            <img
-              src={post.media_url}
-              alt={post.caption ?? "post"}
-              className="w-full max-h-[600px] object-cover pointer-events-none"
-              loading="lazy"
-              draggable={false}
-            />
-          )}
-          {isMobile && !hintDismissed && (
-            <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-4 animate-float-in">
-              <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
-                <Hand className="h-4 w-4" />
-                Tap to view
-              </div>
+          <header className="flex items-center gap-3 p-4">
+            <Link to="/u/$username" params={{ username: profile?.username ?? "" }}>
+              <Avatar src={profile?.avatar_url} name={profile?.username ?? "?"} />
+            </Link>
+            <div className="flex-1 min-w-0">
+              <Link to="/u/$username" params={{ username: profile?.username ?? "" }} className="font-semibold text-sm hover:underline">
+                {profile?.username ?? "user"}
+              </Link>
+              <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</p>
             </div>
-          )}
-        </div>
+          </header>
 
-        <div className="flex items-center gap-2 p-3">
-          <button onClick={toggleLike} aria-label="Like" className="rounded-full p-2 hover:bg-secondary">
-            <Heart className={`h-6 w-6 transition ${liked ? "fill-pink-500 text-pink-500" : ""} ${pop ? "animate-heart-pop" : ""}`} />
-          </button>
-          <button onClick={() => openModal(true)} aria-label="Comment" className="rounded-full p-2 hover:bg-secondary">
-            <MessageCircle className="h-6 w-6" />
-          </button>
-          <button onClick={sharePost} aria-label="Share" className="rounded-full p-2 hover:bg-secondary">
-            <Send className="h-6 w-6" />
-          </button>
-          <button aria-label="Save" className="ml-auto rounded-full p-2 hover:bg-secondary"><Bookmark className="h-6 w-6" /></button>
-        </div>
+          <div
+            role="button"
+            tabIndex={0}
+            onDoubleClick={toggleLike}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(false); } }}
+            className="relative block w-full bg-black/40 cursor-pointer select-none touch-manipulation"
+            aria-label="Open post"
+          >
+            {post.media_type === "video" ? (
+              <video
+                src={post.media_url}
+                muted
+                loop
+                playsInline
+                autoPlay
+                className="w-full max-h-[600px] object-contain pointer-events-none"
+              />
+            ) : (
+              <img
+                src={post.media_url}
+                alt={post.caption ?? "post"}
+                className="w-full max-h-[600px] object-cover pointer-events-none"
+                loading="lazy"
+                draggable={false}
+              />
+            )}
+            {isMobile && !hintDismissed && (
+              <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-4 animate-float-in">
+                <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
+                  <Hand className="h-4 w-4" />
+                  Tap to view
+                </div>
+              </div>
+            )}
+          </div>
 
-        <div className="px-4 pb-4 text-sm">
-          <p className="font-semibold">{likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}</p>
-          {post.caption && (
-            <p className="mt-1">
-              <span className="font-semibold mr-1">{profile?.username}</span>{post.caption}
-            </p>
-          )}
-          {commentCount > 0 && (
-            <button onClick={() => openModal(false)} className="mt-1 text-xs text-muted-foreground hover:underline">
-              View all {commentCount} {commentCount === 1 ? "comment" : "comments"}
+          <div className="flex items-center gap-2 p-3">
+            <button onClick={toggleLike} aria-label="Like" className="rounded-full p-2 hover:bg-secondary">
+              <Heart className={`h-6 w-6 transition ${liked ? "fill-pink-500 text-pink-500" : ""} ${pop ? "animate-heart-pop" : ""}`} />
             </button>
-          )}
-        </div>
-      </article>
+            <button onClick={() => openModal(true)} aria-label="Comment" className="rounded-full p-2 hover:bg-secondary">
+              <MessageCircle className="h-6 w-6" />
+            </button>
+            <button onClick={sharePost} aria-label="Share" className="rounded-full p-2 hover:bg-secondary">
+              <Send className="h-6 w-6" />
+            </button>
+            <button aria-label="Save" className="ml-auto rounded-full p-2 hover:bg-secondary"><Bookmark className="h-6 w-6" /></button>
+          </div>
+
+          <div className="px-4 pb-4 text-sm">
+            <p className="font-semibold">{likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}</p>
+            {post.caption && (
+              <p className="mt-1">
+                <span className="font-semibold mr-1">{profile?.username}</span>{post.caption}
+              </p>
+            )}
+            {commentCount > 0 && (
+              <button onClick={() => openModal(false)} className="mt-1 text-xs text-muted-foreground hover:underline">
+                View all {commentCount} {commentCount === 1 ? "comment" : "comments"}
+              </button>
+            )}
+          </div>
+        </article>
+      )}
 
       {modalOpen && (
         <PostModal
