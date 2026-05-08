@@ -169,11 +169,20 @@ function ProfilePage() {
       ) : (
         <div className="grid grid-cols-3 gap-1">
           {posts.map((p) => (
-            <div key={p.id} className="aspect-square overflow-hidden rounded-xl bg-secondary">
+            <div key={p.id} className="group relative aspect-square overflow-hidden rounded-xl bg-secondary">
               {p.media_type === "video" ? (
                 <video src={p.media_url} className="h-full w-full object-cover" />
               ) : (
                 <img src={p.media_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+              )}
+              {isMe && (
+                <button
+                  onClick={() => deletePost(p.id)}
+                  aria-label="Delete post"
+                  className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100 hover:bg-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
           ))}
