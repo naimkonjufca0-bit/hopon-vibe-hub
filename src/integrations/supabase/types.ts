@@ -195,6 +195,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_private: boolean
           username: string
         }
         Insert: {
@@ -203,6 +204,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_private?: boolean
           username: string
         }
         Update: {
@@ -211,6 +213,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_private?: boolean
           username?: string
         }
         Relationships: []
