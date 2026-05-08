@@ -118,12 +118,21 @@ function ProfilePage() {
           {avatarUploading && <span className="absolute inset-0 grid place-items-center rounded-full bg-black/50 text-white text-xs">Uploading…</span>}
         </label>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold truncate">{profile.username}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-bold truncate flex items-center gap-1.5">
+              {profile.username}
+              {profile.is_private && <Lock className="h-4 w-4 text-muted-foreground" aria-label="Private account" />}
+            </h1>
             {isMe ? (
-              <button onClick={() => setEditing((v) => !v)} className="ml-auto rounded-2xl border border-border bg-card px-3 py-1.5 text-xs font-semibold flex items-center gap-1">
-                <Settings className="h-3.5 w-3.5" /> {editing ? "Cancel" : "Edit"}
-              </button>
+              <div className="ml-auto flex gap-2">
+                <button onClick={togglePrivacy} className="rounded-2xl border border-border bg-card px-3 py-1.5 text-xs font-semibold flex items-center gap-1" title={profile.is_private ? "Make public" : "Make private"}>
+                  {profile.is_private ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                  {profile.is_private ? "Private" : "Public"}
+                </button>
+                <button onClick={() => setEditing((v) => !v)} className="rounded-2xl border border-border bg-card px-3 py-1.5 text-xs font-semibold flex items-center gap-1">
+                  <Settings className="h-3.5 w-3.5" /> {editing ? "Cancel" : "Edit"}
+                </button>
+              </div>
             ) : (
               <div className="ml-auto flex gap-2">
                 <button onClick={toggleFollow} className={`rounded-2xl px-4 py-1.5 text-xs font-semibold ${following ? "bg-secondary" : "bg-brand-gradient text-white shadow-glow"}`}>
