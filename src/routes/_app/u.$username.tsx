@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar } from "@/components/PostCard";
 import { toast } from "sonner";
-import { Settings, MessageCircle } from "lucide-react";
+import { Settings, MessageCircle, Lock, Globe, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/u/$username")({ component: ProfilePage });
 
-type Profile = { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null };
+type Profile = { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null; is_private: boolean };
 type GridPost = { id: string; media_url: string; media_type: string };
 
 function ProfilePage() {
