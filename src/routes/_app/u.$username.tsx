@@ -73,6 +73,24 @@ function ProfilePage() {
     refreshProfile();
   };
 
+  const togglePrivacy = async () => {
+    if (!isMe) return;
+    const next = !profile.is_private;
+    const { error } = await supabase.from("profiles").update({ is_private: next }).eq("id", profile.id);
+    if (error) return toast.error(error.message);
+    setProfile({ ...profile, is_private: next });
+    toast.success(next ? "Account is now private" : "Account is now public");
+  };
+
+  const deletePost = async (postId: string) => {
+    if (!confirm("Delete this post? This cannot be undone.")) return;
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (error) return toast.error(error.message);
+    setPosts((ps) => ps.filter((p) => p.id !== postId));
+    setStats((s) => ({ ...s, posts: Math.max(0, s.posts - 1) }));
+    toast.success("Post deleted");
+  };
+
   const onAvatar = async (file: File) => {
     if (!user) return;
     setAvatarUploading(true);
