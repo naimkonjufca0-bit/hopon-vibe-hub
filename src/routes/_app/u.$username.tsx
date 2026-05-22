@@ -94,11 +94,14 @@ function ProfilePage() {
     toast.success(next ? "Account is now private" : "Account is now public");
   };
 
-  const deletePost = async (postId: string) => {
-    if (!confirm("Delete this post? This cannot be undone.")) return;
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
+  const deletePost = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("posts").delete().eq("id", deleteTarget);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) return toast.error(error.message);
-    setPosts((ps) => ps.filter((p) => p.id !== postId));
+    setPosts((ps) => ps.filter((p) => p.id !== deleteTarget));
     setStats((s) => ({ ...s, posts: Math.max(0, s.posts - 1) }));
     toast.success("Post deleted");
   };
