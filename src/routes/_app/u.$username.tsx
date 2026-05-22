@@ -192,7 +192,7 @@ function ProfilePage() {
               )}
               {isMe && (
                 <button
-                  onClick={() => deletePost(p.id)}
+                  onClick={() => setDeleteTarget(p.id)}
                   aria-label="Delete post"
                   className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100 hover:bg-destructive"
                 >
