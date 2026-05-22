@@ -4,7 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar } from "@/components/PostCard";
 import { toast } from "sonner";
-import { Settings, MessageCircle, Lock, Globe, Trash2 } from "lucide-react";
+import { Settings, MessageCircle, Lock, Globe, Trash2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/u/$username")({ component: ProfilePage });
 
@@ -22,6 +32,8 @@ function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -82,11 +94,14 @@ function ProfilePage() {
     toast.success(next ? "Account is now private" : "Account is now public");
   };
 
-  const deletePost = async (postId: string) => {
-    if (!confirm("Delete this post? This cannot be undone.")) return;
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
+  const deletePost = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("posts").delete().eq("id", deleteTarget);
+    setDeleting(false);
+    setDeleteTarget(null);
     if (error) return toast.error(error.message);
-    setPosts((ps) => ps.filter((p) => p.id !== postId));
+    setPosts((ps) => ps.filter((p) => p.id !== deleteTarget));
     setStats((s) => ({ ...s, posts: Math.max(0, s.posts - 1) }));
     toast.success("Post deleted");
   };
@@ -177,7 +192,7 @@ function ProfilePage() {
               )}
               {isMe && (
                 <button
-                  onClick={() => deletePost(p.id)}
+                  onClick={() => setDeleteTarget(p.id)}
                   aria-label="Delete post"
                   className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100 hover:bg-destructive"
                 >
@@ -188,6 +203,34 @@ function ProfilePage() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This cannot be undone. The post will be permanently removed from your profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); deletePost(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting…
+                </span>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
