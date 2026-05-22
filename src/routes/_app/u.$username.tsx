@@ -4,7 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar } from "@/components/PostCard";
 import { toast } from "sonner";
-import { Settings, MessageCircle, Lock, Globe, Trash2 } from "lucide-react";
+import { Settings, MessageCircle, Lock, Globe, Trash2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/u/$username")({ component: ProfilePage });
 
