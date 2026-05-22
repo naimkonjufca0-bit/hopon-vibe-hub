@@ -179,7 +179,15 @@ function ProfilePage() {
         </div>
       )}
 
-      {posts.length === 0 ? (
+      {profile.is_private && !isMe && !following ? (
+        <div className="rounded-3xl border border-border bg-card p-10 text-center space-y-3">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary">
+            <Lock className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">This account is private</p>
+          <p className="text-xs text-muted-foreground">Follow this account to see their posts.</p>
+        </div>
+      ) : posts.length === 0 ? (
         <p className="rounded-3xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">No posts yet.</p>
       ) : (
         <div className="grid grid-cols-3 gap-1">
