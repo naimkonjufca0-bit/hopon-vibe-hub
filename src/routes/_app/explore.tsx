@@ -172,7 +172,13 @@ function Explore() {
           )}
         </section>
       )}
-      {openPost && <PostViewer post={openPost} onClose={() => setOpenPost(null)} />}
+      {openPost && (
+        <PostViewer
+          post={openPost}
+          onClose={() => setOpenPost(null)}
+          onDeleted={(id) => setTrending((t) => t.filter((p) => p.id !== id))}
+        />
+      )}
     </div>
   );
 }
